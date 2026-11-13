@@ -1,0 +1,382 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Serendib — design tokens
+   Palette drawn from Kandyan lacquer work and temple murals:
+   solid fills only, no gradients anywhere.
+------------------------------------------------------------------- */
+@theme {
+  --color-maroon: #6f1a28;
+  --color-maroon-deep: #561320;
+  --color-lacquer: #b3372a;
+  --color-saffron: #e4902b;
+  --color-gold: #f0b93f;
+  --color-leaf: #17503f;
+  --color-leaf-deep: #103b2f;
+  --color-ocean: #14485a;
+  --color-parchment: #f3e8d2;
+  --color-paper: #faf4e6;
+  --color-clay: #dccaa6;
+  --color-teak: #3b251a;
+  --color-ink: #1b1411;
+
+  --font-display: "Abhaya Libre", "Noto Sans Tamil", "Noto Serif Sinhala", Georgia, serif;
+  --font-sans: "Yaldevi", "Noto Sans Sinhala", "Noto Sans Tamil", system-ui, sans-serif;
+  --font-label: "Gemunu Libre", "Noto Sans Tamil", "Yaldevi", system-ui, sans-serif;
+
+  --ease-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017,
+    1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%,
+    1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%,
+    0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1
+  );
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-parchment);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    overflow-x: clip;
+  }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p, li, dd { text-wrap: pretty; }
+  ::selection { background: var(--color-saffron); color: var(--color-ink); }
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--color-ink) !important;
+  }
+  summary { cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+}
+
+/* ------------------------------------------------------------------
+   Type
+------------------------------------------------------------------- */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+}
+.label {
+  font-family: var(--font-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+.prose-lk p + p { margin-top: 1em; }
+
+/* ------------------------------------------------------------------
+   Buttons
+------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 999px;
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.6s var(--ease-spring), background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn:hover { transform: translateY(-2px) scale(1.03); }
+.btn:active { transform: scale(0.96); }
+.btn[disabled] { opacity: 0.6; cursor: progress; transform: none; }
+.btn-saffron { background: var(--color-saffron); color: var(--color-ink); }
+.btn-saffron:hover { background: var(--color-gold); }
+.btn-maroon { background: var(--color-maroon); color: var(--color-paper); }
+.btn-maroon:hover { background: var(--color-lacquer); }
+.btn-ink { background: var(--color-ink); color: var(--color-paper); }
+.btn-ink:hover { background: var(--color-teak); }
+.btn-line { border: 1.5px solid currentColor; }
+.btn-line:hover { background: var(--color-paper); color: var(--color-ink); border-color: var(--color-paper); }
+.btn-line-dark { border: 1.5px solid var(--color-ink); color: var(--color-ink); }
+.btn-line-dark:hover { background: var(--color-ink); color: var(--color-paper); }
+
+/* ------------------------------------------------------------------
+   Liquid glass — translucent solid tint + backdrop refraction,
+   specular rim built from inset shadows (no gradients).
+------------------------------------------------------------------- */
+.glass {
+  background: rgb(27 20 17 / 0.62);
+  color: var(--color-paper);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.06);
+  backdrop-filter: blur(18px) saturate(180%) brightness(1.06);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 1px 0 0 rgb(255 255 255 / 0.1),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3),
+    0 14px 34px rgb(0 0 0 / 0.3);
+}
+.glass-clear {
+  background: rgb(27 20 17 / 0.46);
+  color: var(--color-paper);
+  -webkit-backdrop-filter: blur(14px) saturate(190%) brightness(0.76);
+  backdrop-filter: blur(14px) saturate(190%) brightness(0.76);
+  border: 1px solid rgb(255 255 255 / 0.34);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    inset 0 -1px 0 rgb(0 0 0 / 0.22),
+    0 10px 28px rgb(0 0 0 / 0.26);
+}
+/* Deeper tint for chrome that must stay legible over any section colour. */
+.glass-deep { background: rgb(27 20 17 / 0.76); }
+.glass-light {
+  background: rgb(250 244 230 / 0.72);
+  color: var(--color-ink);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(59 37 26 / 0.14),
+    0 14px 34px rgb(27 20 17 / 0.18);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-clear { background: rgb(27 20 17 / 0.86); }
+  .glass-light { background: rgb(250 244 230 / 0.96); }
+}
+/* Glass panel that only appears where text overlaps the 3D scene (wide screens). */
+@media (min-width: 64rem) {
+  .glass-lg {
+    padding: 2.5rem;
+    border-radius: 2rem;
+    background: rgb(27 20 17 / 0.62);
+    -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.06);
+    backdrop-filter: blur(18px) saturate(180%) brightness(1.06);
+    border: 1px solid rgb(255 255 255 / 0.2);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.4),
+      inset 1px 0 0 rgb(255 255 255 / 0.1),
+      inset 0 -1px 0 rgb(0 0 0 / 0.3),
+      0 14px 34px rgb(0 0 0 / 0.3);
+  }
+}
+.liquid {
+  transition: transform 0.7s var(--ease-spring), border-radius 0.7s var(--ease-spring);
+}
+.liquid:hover { transform: scale(1.04); }
+.liquid:active { transform: scale(0.97); }
+
+/* ------------------------------------------------------------------
+   Traditional ornament — palā-peti (lotus-petal) and bead borders,
+   drawn as masks so they take any solid colour.
+------------------------------------------------------------------- */
+.petals {
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='20' viewBox='0 0 26 20'%3E%3Cpath d='M13 0C19 5 24 12 24 20H2C2 12 7 5 13 0Z'/%3E%3C/svg%3E") repeat-x center bottom / 26px 20px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='20' viewBox='0 0 26 20'%3E%3Cpath d='M13 0C19 5 24 12 24 20H2C2 12 7 5 13 0Z'/%3E%3C/svg%3E") repeat-x center bottom / 26px 20px;
+}
+.petals-lg { height: 30px; -webkit-mask-size: 39px 30px; mask-size: 39px 30px; }
+.petals-down { transform: scaleY(-1); }
+.beads {
+  height: 8px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Ccircle cx='4' cy='4' r='3.2'/%3E%3Cpath d='M12 1.2 14.8 4 12 6.8 9.2 4Z'/%3E%3C/svg%3E") repeat-x center / 16px 8px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Ccircle cx='4' cy='4' r='3.2'/%3E%3Cpath d='M12 1.2 14.8 4 12 6.8 9.2 4Z'/%3E%3C/svg%3E") repeat-x center / 16px 8px;
+}
+.rule-double {
+  border-top: 3px double currentColor;
+}
+
+/* ------------------------------------------------------------------
+   Marquee
+------------------------------------------------------------------- */
+.marquee { display: flex; width: max-content; animation: marquee 48s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ------------------------------------------------------------------
+   Pointer tilt (3D cards)
+------------------------------------------------------------------- */
+.tilt {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.5s var(--ease-spring);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.tilt[data-live="true"] { transition-duration: 0.08s; transition-timing-function: linear; }
+.tilt-pop { transform: translateZ(36px); }
+
+/* ------------------------------------------------------------------
+   3D island labels
+------------------------------------------------------------------- */
+.island-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transition: opacity 0.35s;
+}
+.island-label[data-on="false"] { opacity: 0; pointer-events: none; visibility: hidden; }
+.island-label a {
+  display: block;
+  transform: translate(-50%, calc(-100% - 10px));
+  pointer-events: auto;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: transform 0.5s var(--ease-spring), background-color 0.2s, color 0.2s;
+}
+.island-label a:hover, .island-label a:focus-visible {
+  background: var(--color-gold);
+  color: var(--color-ink);
+  transform: translate(-50%, calc(-100% - 14px)) scale(1.08);
+}
+
+/* ------------------------------------------------------------------
+   Scroll-driven 3D motion (CSS scroll timelines).
+   Everything is visible by default; motion is an enhancement only
+   where the browser supports it and the visitor has not asked for less.
+------------------------------------------------------------------- */
+@keyframes fx-rise {
+  from { opacity: 0; transform: translateY(70px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fx-flip {
+  from { opacity: 0; transform: perspective(1100px) rotateX(38deg) translateY(90px) scale(0.9); }
+  to { opacity: 1; transform: perspective(1100px) rotateX(0deg) translateY(0) scale(1); }
+}
+@keyframes fx-swing-l {
+  from { opacity: 0; transform: perspective(1200px) rotateY(32deg) translateX(-80px); }
+  to { opacity: 1; transform: perspective(1200px) rotateY(0deg) translateX(0); }
+}
+@keyframes fx-swing-r {
+  from { opacity: 0; transform: perspective(1200px) rotateY(-32deg) translateX(80px); }
+  to { opacity: 1; transform: perspective(1200px) rotateY(0deg) translateX(0); }
+}
+@keyframes fx-drift {
+  from { transform: translateY(-7%) scale(1.16); }
+  to { transform: translateY(7%) scale(1.16); }
+}
+@keyframes fx-spin { to { transform: rotate(360deg); } }
+@keyframes fx-hero-a { to { transform: translateY(-90px); } }
+@keyframes fx-hero-b { to { transform: translateY(-190px); } }
+@keyframes fx-hero-c { to { transform: translateY(-40px); } }
+@keyframes fx-hero-word { to { transform: translateX(-12%); } }
+@keyframes fx-zoom-out {
+  from { transform: scale(1.25); }
+  to { transform: scale(1); }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fx-rise {
+      animation: fx-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+    .fx-flip {
+      animation: fx-flip linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 32%;
+      transform-origin: 50% 100%;
+    }
+    .fx-swing-l {
+      animation: fx-swing-l linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 34%;
+    }
+    .fx-swing-r {
+      animation: fx-swing-r linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 34%;
+    }
+    .fx-drift {
+      animation: fx-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    .fx-zoom-out {
+      animation: fx-zoom-out linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 60%;
+    }
+    .fx-spin {
+      animation: fx-spin linear both;
+      animation-timeline: scroll(root);
+    }
+    .fx-hero-a, .fx-hero-b, .fx-hero-c, .fx-hero-word {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+    .fx-hero-a { animation-name: fx-hero-a; }
+    .fx-hero-b { animation-name: fx-hero-b; }
+    .fx-hero-c { animation-name: fx-hero-c; }
+    .fx-hero-word { animation-name: fx-hero-word; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee { animation: none; }
+  .btn, .liquid, .tilt { transition: none; }
+  .btn:hover, .liquid:hover { transform: none; }
+}
+
+/* ------------------------------------------------------------------
+   Misc
+------------------------------------------------------------------- */
+.snap-row {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-saffron) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-row > * { scroll-snap-align: start; flex: none; }
+
+dialog.lightbox {
+  max-width: none;
+  max-height: none;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border: 0;
+}
+dialog.lightbox::backdrop { background: var(--color-ink); }
+
+.field {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1.5px solid var(--color-clay);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+.field::placeholder { color: rgb(59 37 26 / 0.55); }
+.field:focus-visible { border-color: var(--color-maroon); }
+.field[aria-invalid="true"] { border-color: var(--color-lacquer); }
