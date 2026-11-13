@@ -7,7 +7,6 @@ It only shows the island. There are no bookings and no payments.
 | Document | What it's for |
 | --- | --- |
 | **README.md** (this file) | What the project is and how to run it on your computer |
-| **[DEPLOY.md](./DEPLOY.md)** | Step-by-step tutorial: put the site online **for free** |
 | **[STUDY.md](./STUDY.md)** | The whole project explained, for learning how it works |
 
 ---
