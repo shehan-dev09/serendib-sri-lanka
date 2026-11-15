@@ -17,4 +17,14 @@ next-env.d.ts
 # logs & OS files
 npm-debug.log*
 .DS_Store
+Thumbs.db
 .vercel
+
+# IDE & editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Next.js auto-generated agent instructions
+AGENTS.md

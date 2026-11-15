@@ -1,88 +1,137 @@
-# Serendib — Discover Sri Lanka
+# Serendib — Discover Sri Lanka 🇱🇰
 
-A showcase website about Sri Lanka for visitors from abroad: ancient cities, tea country, wildlife, beaches, food, festivals, suggested routes and practical travel advice. It has a **realistic 3D satellite terrain** of the island (real elevation and Sentinel-2 imagery, with animated ocean shaders), "liquid glass" panels, 3D effects that run as you scroll, and a solid-colour design based on traditional Kandyan art.
+[![Next.js](https://img.shields.io/badge/Next.js-16.4-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![Three.js](https://img.shields.io/badge/Three.js-WebGL-black?logo=three.js)](https://threejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-It only shows the island. There are no bookings and no payments.
+An immersive showcase web application for Sri Lanka designed for international travellers. Featuring a **realistic 3D satellite terrain** with real digital elevation data and custom GLSL ocean shaders, scroll-driven camera storytelling, "liquid glass" UI surfaces, and a design language rooted in traditional Kandyan temple arts.
 
-| Document | What it's for |
-| --- | --- |
-| **README.md** (this file) | What the project is and how to run it on your computer |
-| **[DEPLOY.md](./DEPLOY.md)** | Step-by-step tutorial: put the site online **for free** |
-| **[STUDY.md](./STUDY.md)** | The whole project explained, for learning how it works |
+Built purely as a **cultural showcase** (content, culture, and discovery — zero bookings or payment barriers).
 
 ---
 
-## Pages
+## 📚 Project Documentation
 
-| Route | Page |
+| Document | Purpose |
 | --- | --- |
-| `/` | Home: hero, a 3D island tour driven by scrolling, highlights, season finder |
-| `/destinations` | Draggable 3D island + 18 destinations with search and filters |
-| `/destinations/[slug]` | A guide to each place, with visitor notes |
-| `/experiences` | 10 signature experiences |
-| `/culture` | History, UNESCO sites, festivals, crafts, etiquette, phrasebook |
-| `/food` | Dishes, drinks, tea regions, spices |
-| `/wildlife` | Animals, national parks, responsible travel |
-| `/itineraries` | Four day-by-day routes |
-| `/plan` | Travel guide: seasons, entry, transport, money, health, FAQ |
-| `/gallery` | Photo gallery with a full-screen viewer |
-| `/guestbook` | Visitors leave notes and ratings |
-| `/contact` | General questions form, official sources, emergency numbers |
-| `/api/health` | Health check (`{ ok, storage }`) |
+| **[README.md](./README.md)** | Project overview, tech stack, and local development guide |
+| **[STUDY.md](./STUDY.md)** | Architecture breakdown, 3D math & shaders, design decisions, and deep-dive guide |
+| **[DEPLOY.md](./DEPLOY.md)** | Step-by-step free deployment tutorial (Vercel, Render, Netlify + Neon PostgreSQL) |
 
-## Tech stack
+---
 
-- **Next.js 16** (App Router, Server Components, Server Actions) + **React 19**
-- **TypeScript**
-- **Tailwind CSS 4**
-- **three.js** + custom GLSL shaders for the 3D satellite terrain and water
-- **PostgreSQL** + **Drizzle ORM**, with an automatic **JSON-file fallback** when there is no database
-- Self-hosted fonts via `@fontsource`: Abhaya Libre, Yaldevi and Gemunu Libre (all Sri Lankan type designs), plus Noto Sans Tamil
+## ✨ Key Features
 
-## Run it on your computer
+- **Realistic 3D Satellite Island (WebGL / Three.js):**
+  - Generated using real Copernicus Sentinel-2 cloudless satellite imagery and AWS Terrain elevation data.
+  - Custom GLSL ocean shaders with sun glint and depth-based wave animation.
+  - Interactive camera controls and scroll-driven storytelling through 6 distinct geographic regions.
+  - Automatic collision-avoidance layout with dynamic SVG leader lines for destination pins.
+  - Graceful 2D satellite map fallback for devices without WebGL.
+- **Rich Curated Content:**
+  - 18 comprehensive destination guides with elevation, highlights, and locator maps.
+  - Cultural history, UNESCO World Heritage sites, traditional festivals, crafts, phrasebooks, and etiquette.
+  - Culinary guide detailing regional tea, spices, and iconic dishes.
+  - Wildlife and national park guide emphasizing responsible tourism.
+  - Four curated day-by-day travel itineraries.
+- **Liquid Glass UI & Sri Lankan Typography:**
+  - Glassmorphic panels with warm amber and deep abyss colour palettes inspired by traditional Kandyan lacquerware.
+  - Beautiful typefaces celebrating Sri Lankan design heritage (*Abhaya Libre*, *Gemunu Libre*, *Yaldevi*, and *Noto Sans Tamil*).
+- **Hybrid Storage & Server Actions:**
+  - PostgreSQL with Drizzle ORM for guestbook notes, visitor ratings, and contact messages.
+  - **Automatic zero-config JSON-file fallback** when no database URL is provided — works immediately out of the box.
 
-You need **Node.js 20.9 or newer** (check with `node -v`).
+---
+
+## 🗺️ Application Routes
+
+| Route | Description |
+| --- | --- |
+| `/` | **Home**: Hero, interactive scroll-driven 3D island tour, island highlights, and season finder |
+| `/destinations` | **Destinations**: Full-screen draggable 3D island explorer with search and regional filters |
+| `/destinations/[slug]` | **Destination Guide**: Deep dive per location with visitor notes and 2D locator map |
+| `/experiences` | **Experiences**: 10 signature Sri Lankan travel experiences |
+| `/culture` | **Culture**: History, UNESCO heritage citadels, festivals, crafts, and Sinhala phrasebook |
+| `/food` | **Food & Tea**: Regional specialties, street food, tea elevations, and spice profiles |
+| `/wildlife` | **Wildlife**: Endemic animals, national parks, and ethical wildlife watching guidelines |
+| `/itineraries` | **Itineraries**: Four curated routes (from 7-day highlights to comprehensive 21-day journeys) |
+| `/plan` | **Practical Guide**: Monsoons, visa guidelines, currency, transport, and emergency info |
+| `/gallery` | **Gallery**: Curated high-resolution photography with full-screen viewer |
+| `/guestbook` | **Guestbook**: Interactive visitor reviews and star ratings |
+| `/contact` | **Contact**: Message portal, official diplomatic and emergency contact points |
+| `/api/health` | **Health check**: System and database connectivity check (`{ ok, storage }`) |
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, Server Components, Server Actions)
+- **UI Library:** [React 19](https://react.dev/)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
+- **3D Graphics & Shaders:** [Three.js](https://threejs.org/) with custom WebGL GLSL shaders
+- **Database & ORM:** [PostgreSQL](https://www.postgresql.org/) + [Drizzle ORM](https://orm.drizzle.team/)
+- **Fallback Data Store:** Local atomic JSON storage (when running without PostgreSQL)
+- **Typography:** Self-hosted fonts via `@fontsource` (*Abhaya Libre*, *Gemunu Libre*, *Yaldevi*, *Noto Sans Tamil*)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js 20.9+** (Check version with `node -v`)
+- **npm** or **pnpm** / **yarn**
+
+### Quick Start
 
 ```bash
-# 1. Install dependencies
+# 1. Clone the repository
+git clone https://github.com/shehan-dev09/serendib-sri-lanka.git
+cd serendib-sri-lanka
+
+# 2. Install dependencies
 npm install
 
-# 2. Create your environment file
+# 3. Create your environment file
 cp .env.example .env
 
-# 3. Start the development server
+# 4. Start the development server
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Do I need a database?
+> **Note on Database:** You don't need a database to run the site locally. If `DATABASE_URL` is omitted, visitor notes are automatically stored locally in `.data/serendib.json`. For production deployments with PostgreSQL (e.g. Neon), refer to [DEPLOY.md](./DEPLOY.md).
 
-**No — not to try it out.** Leave `DATABASE_URL` empty in `.env` and notes are saved to a JSON file in `./.data/serendib.json`. The site works fully.
+---
 
-**For anything online, yes.** Free hosts throw away files written at runtime, so put notes in PostgreSQL. Set `DATABASE_URL` to any PostgreSQL connection string: a local server, or a free cloud database such as Neon (see [DEPLOY.md](./DEPLOY.md)). The tables are **created automatically** on first use; you don't need to run a migration.
+## 📜 Available Scripts
 
-You can check which storage is active at `/api/health`:
+| Script | Command | Purpose |
+| --- | --- | --- |
+| `dev` | `npm run dev` | Starts local Next.js development server with hot reload |
+| `build` | `npm run build` | Builds optimized production bundle |
+| `start` | `npm run start` | Runs the production build locally |
+| `lint` | `npm run lint` | Runs ESLint analysis |
+| `typecheck` | `npm run typecheck` | Validates TypeScript types across the project |
+| `build-terrain` | `node scripts/build-terrain.mjs` | Rebuilds the satellite terrain tiles in `public/terrain/` (pre-built assets included) |
 
-```json
-{ "ok": true, "storage": "postgres" }
-```
+---
 
-## Scripts
+## 🌿 Data & Media Attribution
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Development server with hot reload |
-| `npm run build` | Production build |
-| `npm run start` | Serve the production build |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript check |
-| `npx drizzle-kit push` | Optional: push `src/db/schema.ts` to the database manually |
-| `node scripts/build-terrain.mjs` | Optional: rebuild the 3D map data in `public/terrain/` (already included) |
+- **3D Satellite & Elevation:** Sentinel-2 cloudless 2016 imagery by EOX IT Services GmbH (CC BY 4.0; contains modified Copernicus Sentinel data 2016 & 2017). Elevation and bathymetry from AWS Open Data Terrain Tiles (SRTM & ETOPO1).
+- **Photography:** Photography contributed by creators on [Pexels](https://www.pexels.com), referenced with full credits in `src/lib/photos.ts`.
 
-## Content and photographs
+---
 
-- All text content lives in `src/lib/data.ts`, so you can edit places, dishes, festivals or routes there without touching any layout code.
-- **Map data:** the satellite imagery is *Sentinel-2 cloudless 2016* by EOX IT Services GmbH (contains modified Copernicus Sentinel data 2016 & 2017), licensed CC BY 4.0. Elevation and sea depth come from AWS Terrain Tiles (SRTM, ETOPO1). The processed files ship in `public/terrain/`, so the live site never calls these services. The credit is shown on the map and in the footer.
-- Photographs are real images from [Pexels](https://www.pexels.com) contributors, loaded from the Pexels CDN. They are listed with captions and credits in `src/lib/photos.ts`, and the credits are shown on `/gallery`.
-- Travel facts such as visas, prices and opening hours change. The site points visitors to official sources; check the content before you publish.
+## 📄 License
+
+This project is open-source and available under the [MIT License](./LICENSE).
+
+---
+
+Developed by **Shehan Nadeesha**
