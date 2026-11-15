@@ -18,7 +18,7 @@ export default async function DestinationsPage({ searchParams }: { searchParams:
 
   return (
     <>
-      <header className="relative overflow-hidden bg-ink text-paper">
+      <header className="relative overflow-hidden bg-abyss text-paper">
         <div className="relative z-10 mx-auto max-w-7xl px-5 pt-32 md:px-8 lg:pointer-events-none lg:flex lg:min-h-[94svh] lg:items-center lg:pt-24 lg:pb-16">
           <div className="glass-lg max-w-md lg:pointer-events-auto lg:max-w-lg">
             <p className="label text-gold">Destinations</p>

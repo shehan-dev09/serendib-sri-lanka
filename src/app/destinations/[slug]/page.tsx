@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { DestinationCard } from "@/components/DestinationCard";
 import { NoteForm } from "@/components/forms";
 import { NotesList } from "@/components/Notes";
+import { SatelliteMap } from "@/components/SatelliteMap";
 import { Arch, LotusMark, MonthStrip, Photo, SectionHead } from "@/components/ui";
 import { DESTINATIONS, getDestination, MONTHS_LONG, type Region } from "@/lib/data";
 import { PHOTOS } from "@/lib/photos";
@@ -42,6 +43,8 @@ export default async function DestinationPage({ params }: Params) {
   const notes = await listNotes(d.slug, 30);
   const nearby = d.nearby.map((s) => DESTINATIONS.find((x) => x.slug === s)).filter((x) => x !== undefined);
   const tamil = d.slug === "jaffna" || d.slug === "trincomalee";
+  const pins = DESTINATIONS.map((x) => ({ slug: x.slug, name: x.name.split(" & ")[0], lat: x.lat, lng: x.lng }));
+  const coords = `${Math.abs(d.lat).toFixed(2)}° N, ${d.lng.toFixed(2)}° E`;
 
   return (
     <>
@@ -139,6 +142,13 @@ export default async function DestinationPage({ params }: Params) {
                       {t}
                     </span>
                   ))}
+                </dd>
+              </div>
+              <div>
+                <dt className="label text-teak">Where it is</dt>
+                <dd className="mt-3">
+                  <SatelliteMap pins={pins} highlight={d.slug} className="mx-auto w-full max-w-[15rem]" />
+                  <span className="mt-2 block text-center text-sm text-teak">{coords}</span>
                 </dd>
               </div>
               <div>

@@ -19,6 +19,8 @@
   --color-clay: #dccaa6;
   --color-teak: #3b251a;
   --color-ink: #1b1411;
+  /* Deep night-ocean tone behind the satellite terrain (matches ABYSS in Island3D). */
+  --color-abyss: #0a1a24;
 
   --font-display: "Abhaya Libre", "Noto Sans Tamil", "Noto Serif Sinhala", Georgia, serif;
   --font-sans: "Yaldevi", "Noto Sans Sinhala", "Noto Sans Tamil", system-ui, sans-serif;

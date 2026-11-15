@@ -14,7 +14,7 @@ This document explains the **whole project**: the idea, the design decisions, th
 6. [Content as data](#6-content-as-data)
 7. [Technique: liquid glass](#7-technique-liquid-glass)
 8. [Technique: traditional ornament without images](#8-technique-traditional-ornament-without-images)
-9. [Technique: the 3D island (three.js)](#9-technique-the-3d-island-threejs)
+9. [Technique: the realistic 3D satellite terrain (three.js)](#9-technique-the-realistic-3d-satellite-terrain-threejs)
 10. [Technique: 3D scroll-driven animation](#10-technique-3d-scroll-driven-animation)
 11. [Technique: pointer tilt cards](#11-technique-pointer-tilt-cards)
 12. [Forms, Server Actions and saving notes](#12-forms-server-actions-and-saving-notes)
@@ -99,7 +99,8 @@ They're self-hosted through `@fontsource` packages imported in `src/app/layout.t
 | **React 19** | Component model; `useTransition` and `useSyncExternalStore` are used |
 | **TypeScript** | Catches mistakes early; the content data is fully typed |
 | **Tailwind CSS 4** | Fast styling with design tokens from `@theme` |
-| **three.js** | WebGL 3D for the island model |
+| **three.js** | WebGL 3D for the satellite terrain, with custom GLSL shaders for the water |
+| **sharp** | Image processing in the build-time terrain pipeline |
 | **Drizzle ORM + PostgreSQL** | Type-safe SQL and a durable database |
 | **JSON-file fallback** | The site works with zero setup and no database |
 | **CSS scroll-driven animations** | Scroll effects run on the browser's compositor with no JavaScript |
@@ -109,6 +110,9 @@ They're self-hosted through `@fontsource` packages imported in `src/app/layout.t
 ## 4. Folder tour
 
 ```
+scripts/
+└─ build-terrain.mjs           ← one-off pipeline: satellite + elevation → /public/terrain
+public/terrain/                 ← generated map assets (imagery, depth mask, elevation grid)
 src/
 ├─ app/                        ← every folder = a URL (App Router)
 │  ├─ layout.tsx               ← shell: fonts, <Nav>, <main>, <Footer>, SVG defs
@@ -126,7 +130,8 @@ src/
 │  └─ icon.svg                 ← favicon
 ├─ components/
 │  ├─ ui.tsx                   ← Photo, Arch, Mandala, LotusMark, SectionHead, PageHero…
-│  ├─ Island3D.tsx             ← the three.js island (client only)
+│  ├─ Island3D.tsx             ← realistic 3D satellite terrain (client only)
+│  ├─ SatelliteMap.tsx         ← 2D satellite map: locator + no-WebGL fallback
 │  ├─ AtlasScroll.tsx          ← scroll-driven island tour + IslandExplorer
 │  ├─ Nav.tsx / Footer.tsx
 │  ├─ DestinationCard.tsx / DestinationsExplorer.tsx
@@ -139,7 +144,8 @@ src/
 └─ lib/
    ├─ data.ts                  ← ALL site content (destinations, dishes, festivals…)
    ├─ photos.ts                ← every photo: id, alt text, photographer
-   ├─ geo.ts                   ← island outline + map projection
+   ├─ geo.ts                   ← Web-Mercator projection (toXY, toUV)
+   ├─ terrain.ts               ← generated: exact bounds of the terrain data
    ├─ store.ts                 ← storage layer (Postgres or JSON file)
    └─ form.ts                  ← shared FormState type
 ```
@@ -312,33 +318,92 @@ On the home page it slowly rotates as you scroll (`.fx-spin`, see §10).
 
 ---
 
-## 9. Technique: the 3D island (three.js)
+## 9. Technique: the realistic 3D satellite terrain (three.js)
 
-File: **`src/components/Island3D.tsx`**
+Files: **`scripts/build-terrain.mjs`** (data pipeline), **`src/components/Island3D.tsx`** (renderer), **`src/components/SatelliteMap.tsx`** (2D version), **`src/lib/terrain.ts`** (generated bounds).
 
-### Loaded only in the browser
+The island is built from **real data**, not drawn by hand:
 
-WebGL doesn't exist on the server, so the component is imported with `next/dynamic` and `ssr: false` (in `AtlasScroll.tsx`). A pulsing lotus shows while it loads.
+| Data | Source | Licence |
+| --- | --- | --- |
+| Satellite imagery | Sentinel-2 cloudless 2016, by EOX IT Services GmbH | CC BY 4.0 (attribution shown on the map) |
+| Elevation and sea depth | AWS Terrain Tiles (SRTM on land, ETOPO1 at sea) | Open data |
 
-### Building the model
+### Step 1: the build-time data pipeline
 
-1. **Outline → 3D shape.** `src/lib/geo.ts` holds the island outline as `[longitude, latitude]` points. `toXY()` projects them to flat coordinates. A `CatmullRomCurve3` smooths the outline, and `ExtrudeGeometry` raises it into a slab with a bevelled saffron edge.
-2. **Beach.** A second, slightly larger and flatter copy in cream sits underneath.
-3. **Sea plate.** A cylinder with gold rings and **44 extruded lotus petals** around the rim, alternating gold and red, which echoes the medallion.
-4. **Highlands.** Six-sided cones (`ConeGeometry(1, 1, 6)`) placed at real mountain coordinates with `flatShading`, for a low-poly look.
-5. **Landmarks.** Sigiriya (a flat-topped rock), stupas at Anuradhapura and Polonnaruwa, Galle lighthouse, Colombo's Lotus Tower and a gopuram at Jaffna.
-6. **Pins.** A stick and a gold bead for each destination, at staggered heights so labels don't overlap.
+`node scripts/build-terrain.mjs` runs **once, by the developer**. Visitors never contact the tile servers.
 
-### HTML labels that follow 3D points
+1. **Pick the crop.** Both sources are Web-Mercator "XYZ" tile sets. At zoom 10 their pixels line up exactly. The script works out which tiles cover Sri Lanka (about 100 of each) and snaps the crop to whole pixels.
+2. **Download and stitch.** Tiles are fetched 8 at a time and copied into one big buffer with `sharp`.
+3. **Decode elevation.** "Terrarium" tiles store height in the colour channels:
 
-Labels are normal HTML links, so you can click, tab to and read them like any other link. Every frame, each pin's 3D position is projected to screen pixels:
+   ```js
+   const metres = R * 256 + G + B / 256 - 32768;
+   ```
+
+   The result runs from −4,310 m (sea floor) to 2,508 m (Pidurutalagala, the highest peak).
+4. **Write the output files:**
+
+   | File | What it is |
+   | --- | --- |
+   | `satellite-hd.jpg` / `satellite-sd.jpg` | The imagery. Water pixels are recoloured by depth, because raw imagery water is nearly black. |
+   | `water.png` | An 8-bit depth mask. 0 is land; 28–255 runs from shallow to deep. The coastline is a single threshold. |
+   | `height.bin(.gz)` | A 512×808 `Int16` elevation grid. Each cell blends the mean with the peak, so summits aren't flattened. |
+   | `src/lib/terrain.ts` | The exact bounds, so the client can line everything up. |
+
+### Step 2: one projection everywhere
+
+Map tiles use **Web Mercator**, so `src/lib/geo.ts` uses it too:
 
 ```ts
-v.copy(heads[p]).project(camera);                 // 3D → -1..1 screen space
-const x = (v.x * 0.5 + 0.5) * width;
-const y = (-v.y * 0.5 + 0.5) * height;
-el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+mercDeg(lat) = ln(tan(π/4 + φ/2)) × 180/π        // northing, in "degree" units
+toXY(lat, lng) → [lng − 80.75, mercDeg(lat) − mercDeg(7.85)]   // 3D world position
+toUV(lat, lng) → position on the images (0→1)                   // texture / 2D map position
 ```
+
+Because the terrain mesh, the textures, the 3D pins and the 2D map pins all go through these two functions, a pin for Ella lands exactly on Ella in every view.
+
+### Step 3: the terrain mesh
+
+`buildTerrain()` creates a grid `BufferGeometry` (each vertex gets a position, a uv coordinate and an index):
+
+- **x** goes linearly from west to east; **z** goes linearly in Mercator northing.
+- **y** is the elevation × `13 / 111 000`, a **13× vertical exaggeration**. At true scale, 2.5 km of mountain on a 445 km island would look flat.
+- The satellite image is draped over it as `MeshStandardMaterial.map`. `computeVertexNormals()` lets the sun light the slopes, so the relief reads.
+- **Level of detail:** capable desktops get every vertex (about 414,000). Everyone else gets every second one in each direction (about 103,000).
+
+### Step 4: the water shader (GLSL)
+
+The sea is one flat plane with a custom `ShaderMaterial`. Per pixel, it:
+
+1. **Reads depth** from `water.png`. Land pixels are discarded, so the terrain shows through.
+2. **Colours by depth:** lagoon turquoise → shelf blue → open-ocean navy.
+3. **Builds a wave normal** from the analytic gradient of three moving sine waves plus fine value noise. No normal-map image is needed.
+4. **Fresnel reflection:** at grazing angles the water reflects more sky, `pow(1 − N·V, 4)`.
+5. **Sun glint:** a tight specular highlight, `pow(R·V, 220)`.
+6. **Shore foam:** a band where the mask is just above the land threshold, broken up by moving noise.
+7. **Distance haze** toward the page background colour.
+8. **Seamless edges:** beyond the data area, edge values are carried outward and faded into open ocean, so shallow seas such as the Palk Strait never end in a straight line.
+
+> **A bug worth learning from.** The haze originally used a distance computed in the *vertex* shader and passed on as a `varying`. The plane has only 4 vertices, about 45 units away, so the interpolated "distance" was about 45 at **every** pixel and the whole sea was fogged to the background colour. The fix: pass the view-space *position* and take `length()` per pixel. **Values that aren't linear can't be interpolated linearly.**
+
+### Step 5: atmosphere, pins and labels
+
+- **Haze** (`THREE.Fog` for the terrain, the same maths in the water shader) scales with camera distance, so the island stays crisp and the horizon melts into the page.
+- **Clouds** are a tileable fractal-noise texture generated on a `<canvas>` at runtime. They drift slowly and fade out as the camera flies in.
+- **Pins** sample the elevation grid with **bilinear interpolation** to stand on the real ground. Each has a stem, a gold bead and a pulsing ring.
+- **Labels** are real HTML links. Each frame, every bead's 3D position is projected to screen pixels (`vector.project(camera)`), and labels behind the camera are hidden.
+
+### Step 6: performance and fallbacks
+
+- **Small downloads:**
+  - the elevation grid ships gzipped and is unzipped in the browser with `DecompressionStream`
+  - the depth mask is half resolution
+  - phones get the smaller satellite image
+- **Adaptive resolution:** if frames take longer than 34 ms, the pixel ratio steps down automatically.
+- **Pauses** when off-screen or when the tab is hidden. **Disposes** all GPU memory when it unmounts.
+- **Respects `prefers-reduced-motion`:** no idle spin, no wave motion, no easing.
+- **No WebGL, or data failed to load?** It shows `SatelliteMap`, a flat satellite image with the same pins positioned by `toUV()`. The same component is the "Where it is" locator on every destination page.
 
 ### Camera "rig" and smooth flying
 
@@ -352,17 +417,7 @@ camera.position.set(
 );
 ```
 
-Moving between views uses **smoothstep easing** (`t*t*(3-2t)`) plus **exponential damping** every frame (`cur += (goal - cur) * k`). That's why the flight glides and slows down at the end instead of stopping dead.
-
-### Being a good citizen
-
-- **Pauses** when off-screen (`IntersectionObserver`) or when the tab is hidden.
-- **Respects `prefers-reduced-motion`.** No idle spin and no easing.
-- **Disposes** every geometry and material on unmount, so memory isn't leaked.
-- **Pixel ratio capped at 2**, which keeps it smooth on high-density phones.
-- **No WebGL?** It shows `IslandFlat`, an SVG map with the same pins.
-
----
+Moving between views uses **smoothstep easing** (`t*t*(3-2t)`) plus **exponential damping** every frame (`cur += (goal - cur) * k`). The flight glides and slows down at the end instead of stopping dead.
 
 ## 10. Technique: 3D scroll-driven animation
 
@@ -612,7 +667,7 @@ Start easy and work down.
 2. **Change the brand colour.** Edit `--color-maroon` in `globals.css` and see how many places update.
 3. **New ornament.** Make a `.diamonds` border using the same `mask` technique as `.petals`.
 4. **New scroll effect.** Write `@keyframes fx-scale-in` and use it with `animation-timeline: view()` on one section.
-5. **New landmark in 3D.** Add a model of Adam's Peak's summit shrine in `Island3D.tsx` using `place(mesh, lat, lng, y)`.
+5. **Terrain experiments.** Change the vertical exaggeration (`VERTICAL`) or the water colours in `WATER_FRAG`, or add a gentle day/night cycle by animating `uSun`.
 6. **Note moderation.** Add an `approved` boolean column (in `schema.ts`, the SQL in `ensureSchema`, and the JSON backend) and only list approved notes.
 7. **Average rating.** Show "★ 4.6 from 12 notes" on each destination page, calculated in `store.ts`.
 8. **Search in the guestbook.** Add a client-side filter over the notes list.
@@ -633,6 +688,10 @@ Start easy and work down.
 | **ORM** | Library for using the database through code instead of raw SQL strings (here: Drizzle) |
 | **Repository pattern** | Hiding storage details behind functions so the backend can change |
 | **WebGL** | Browser API for GPU-accelerated 3D graphics; three.js is built on it |
+| **Web Mercator** | The map projection used by web map tiles; north–south distances stretch with latitude |
+| **DEM / heightmap** | A grid of elevation values used to raise a flat mesh into terrain |
+| **Shader (GLSL)** | A small program that runs on the GPU for every vertex or pixel |
+| **Fresnel effect** | Surfaces reflect more light when you look at them at a shallow angle |
 | **Extrude** | Turning a flat 2D shape into a 3D solid by giving it depth |
 | **Spherical coordinates** | Describing a point by distance and two angles, used to orbit the camera |
 | **Scroll-driven animation** | A CSS animation whose progress follows scroll position instead of time |

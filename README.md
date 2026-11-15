@@ -1,6 +1,6 @@
 # Serendib — Discover Sri Lanka
 
-A showcase website about Sri Lanka for visitors from abroad: ancient cities, tea country, wildlife, beaches, food, festivals, suggested routes and practical travel advice. It has an interactive 3D model of the island, "liquid glass" panels, 3D effects that run as you scroll, and a solid-colour design based on traditional Kandyan art.
+A showcase website about Sri Lanka for visitors from abroad: ancient cities, tea country, wildlife, beaches, food, festivals, suggested routes and practical travel advice. It has a **realistic 3D satellite terrain** of the island (real elevation and Sentinel-2 imagery, with animated ocean shaders), "liquid glass" panels, 3D effects that run as you scroll, and a solid-colour design based on traditional Kandyan art.
 
 It only shows the island. There are no bookings and no payments.
 
@@ -35,7 +35,7 @@ It only shows the island. There are no bookings and no payments.
 - **Next.js 16** (App Router, Server Components, Server Actions) + **React 19**
 - **TypeScript**
 - **Tailwind CSS 4**
-- **three.js** for the 3D island
+- **three.js** + custom GLSL shaders for the 3D satellite terrain and water
 - **PostgreSQL** + **Drizzle ORM**, with an automatic **JSON-file fallback** when there is no database
 - Self-hosted fonts via `@fontsource`: Abhaya Libre, Yaldevi and Gemunu Libre (all Sri Lankan type designs), plus Noto Sans Tamil
 
@@ -78,9 +78,11 @@ You can check which storage is active at `/api/health`:
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript check |
 | `npx drizzle-kit push` | Optional: push `src/db/schema.ts` to the database manually |
+| `node scripts/build-terrain.mjs` | Optional: rebuild the 3D map data in `public/terrain/` (already included) |
 
 ## Content and photographs
 
 - All text content lives in `src/lib/data.ts`, so you can edit places, dishes, festivals or routes there without touching any layout code.
+- **Map data:** the satellite imagery is *Sentinel-2 cloudless 2016* by EOX IT Services GmbH (contains modified Copernicus Sentinel data 2016 & 2017), licensed CC BY 4.0. Elevation and sea depth come from AWS Terrain Tiles (SRTM, ETOPO1). The processed files ship in `public/terrain/`, so the live site never calls these services. The credit is shown on the map and in the footer.
 - Photographs are real images from [Pexels](https://www.pexels.com) contributors, loaded from the Pexels CDN. They are listed with captions and credits in `src/lib/photos.ts`, and the credits are shown on `/gallery`.
 - Travel facts such as visas, prices and opening hours change. The site points visitors to official sources; check the content before you publish.

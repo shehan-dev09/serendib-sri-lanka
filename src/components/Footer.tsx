@@ -87,7 +87,9 @@ export function Footer() {
         <p className="mt-10 max-w-3xl text-sm text-paper/70">
           This guide is an independent showcase of Sri Lanka for visitors from abroad: it does not sell tours, take bookings or handle payments. Entry
           rules, opening times and prices change, so check official sources — including the Department of Immigration (eta.gov.lk) and your own
-          government&rsquo;s travel advice — before you travel. Photography by contributors to Pexels; credits are listed in the{" "}
+          government&rsquo;s travel advice — before you travel. Map imagery: Sentinel-2 cloudless by EOX IT Services GmbH (contains modified
+          Copernicus Sentinel data 2016 &amp; 2017, CC BY 4.0); elevation from AWS Terrain Tiles. Photography by contributors to Pexels; credits are
+          listed in the{" "}
           <Link href="/gallery" className="underline underline-offset-2 hover:text-gold">
             gallery
           </Link>

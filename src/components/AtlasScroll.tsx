@@ -10,8 +10,9 @@ import { Arrow, LotusMark } from "./ui";
 const Island3D = dynamic(() => import("./Island3D"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-abyss">
       <LotusMark className="h-10 w-12 animate-pulse text-gold" />
+      <span className="label text-paper/70">Loading satellite terrain…</span>
     </div>
   ),
 });
@@ -50,7 +51,7 @@ export function AtlasScroll({ steps, pins }: { steps: AtlasStep[]; pins: Pin[] }
   const nameOf = useMemo(() => Object.fromEntries(pins.map((p) => [p.slug, p.name])), [pins]);
 
   return (
-    <section ref={section} className="relative bg-ink text-paper" aria-label="The island, region by region">
+    <section ref={section} className="relative bg-abyss text-paper" aria-label="The island, region by region">
       <div className="sticky top-0 h-svh overflow-hidden">
         <Island3D pins={pins} views={views} progress={progress} active={steps[index].slugs} shift={0.2} className="h-full w-full" />
         <ol className="absolute top-1/2 right-4 hidden -translate-y-1/2 flex-col gap-3 md:flex" aria-hidden="true">

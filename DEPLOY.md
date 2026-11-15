@@ -256,4 +256,5 @@ After about a minute or two the live site shows your change. To change the text 
 | The first visit is slow | Normal on free tiers: Neon wakes the database after 5 idle minutes, and Render's free server wakes after 15. |
 | Neon says the compute is suspended | You used up the month's free compute hours. It resets at the start of the next month. |
 | Photos don't show | Photos load from the Pexels CDN (`images.pexels.com`). Check the visitor's network isn't blocking it. |
-| Fonts or the 3D island look wrong on an old browser | The 3D island needs WebGL. Without it, a flat map is shown automatically. Scroll effects need a modern browser; older ones still show all content. |
+| The 3D map shows a flat image instead | The 3D terrain needs WebGL. Without it, or if the map data fails to load, a flat satellite map is shown automatically. Check that `public/terrain/` was committed to Git (about 2.3 MB). |
+| The 3D map is slow on an old phone | It lowers its resolution automatically. Very old devices may still find it heavy; everything else on the site works regardless. |
