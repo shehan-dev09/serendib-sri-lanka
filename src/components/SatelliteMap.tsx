@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { toUV, type Pin } from "@/lib/geo";
 import { TERRAIN } from "@/lib/terrain";
@@ -19,6 +22,8 @@ export function SatelliteMap({
   className?: string;
   showLabels?: boolean;
 }) {
+  const [imgSrc, setImgSrc] = useState("/terrain/satellite-sd.jpg");
+
   return (
     <figure
       className={`relative overflow-hidden rounded-[1.25rem] bg-abyss ${className}`}
@@ -26,17 +31,16 @@ export function SatelliteMap({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/terrain/satellite-sd.jpg"
+        src={imgSrc}
         alt="Satellite image of Sri Lanka"
         width={Math.round(TERRAIN.imageWidth / 2)}
         height={Math.round(TERRAIN.imageHeight / 2)}
         loading="lazy"
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover"
-        onError={(e) => {
-          const target = e.currentTarget;
-          if (!target.src.includes("/map-data/")) {
-            target.src = "/map-data/satellite-sd.jpg";
+        onError={() => {
+          if (!imgSrc.includes("/map-data/")) {
+            setImgSrc("/map-data/satellite-sd.jpg");
           }
         }}
       />
