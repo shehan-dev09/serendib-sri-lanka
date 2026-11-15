@@ -40,6 +40,61 @@ interface Props {
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
+interface ScreenPin {
+  i: number;
+  sx: number;
+  sy: number;
+  z: number;
+  w: number;
+  h: number;
+  lx: number;
+  ly: number;
+}
+
+function overlaps(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number, pad = 6) {
+  return Math.abs(ax - bx) * 2 < aw + bw + pad && Math.abs(ay - by) * 2 < ah + bh + pad;
+}
+
+/**
+ * Place each label next to its own pin. Try short offsets first (above, then
+ * beside) so names stay close; only move further out when that would overlap.
+ */
+function layoutLabels(items: ScreenPin[], width: number, height: number, padBottom = 28): void {
+  if (items.length === 0) return;
+  items.sort((a, b) => a.sy - b.sy || a.sx - b.sx);
+  const placed: { x: number; y: number; w: number; h: number }[] = [];
+  const margin = 8;
+  const marginTop = 56;
+
+  const tryPut = (p: ScreenPin, lx: number, ly: number): boolean => {
+    const x = p.sx + lx;
+    const y = p.sy + ly;
+    if (x - p.w / 2 < margin || x + p.w / 2 > width - margin) return false;
+    if (y - p.h / 2 < marginTop || y + p.h / 2 > height - margin - padBottom) return false;
+    if (placed.some((q) => overlaps(x, y, p.w, p.h, q.x, q.y, q.w, q.h))) return false;
+    p.lx = lx;
+    p.ly = ly;
+    placed.push({ x, y, w: p.w, h: p.h });
+    return true;
+  };
+
+  for (const p of items) {
+    const g = 13;
+    const hw = p.w / 2;
+    const hh = p.h / 2;
+    const slots: [number, number][] = [];
+    for (const d of [hh + g, hh + g + 18, hh + g + 34]) {
+      slots.push([0, -d], [hw * 0.55, -d], [-hw * 0.55, -d], [hw + g, -d * 0.45], [-(hw + g), -d * 0.45]);
+    }
+    slots.push([hw + g, 0], [-(hw + g), 0], [hw + g, hh + g], [-(hw + g), hh + g], [0, hh + g], [0, -(hh + g + 50)]);
+    if (!slots.some(([lx, ly]) => tryPut(p, lx, ly))) {
+      p.lx = 0;
+      p.ly = -(hh + g);
+      placed.push({ x: p.sx, y: p.sy + p.ly, w: p.w, h: p.h });
+    }
+  }
+}
+
 let webgl: boolean | null = null;
 /** Whether this browser can create a WebGL context (checked once). */
 function hasWebGL(): boolean {
@@ -64,24 +119,56 @@ interface TerrainAssets {
 }
 
 let cachedHeights: Promise<Int16Array> | null = null;
+
+/** Prefer the App Router (/map-data/…) — `next dev` 404s some files in /public (especially .bin.gz). */
+const dataUrls = (file: string) => [`/map-data/${file}`, `/terrain/${file}`];
+
+async function fetchFirst(urls: string[]): Promise<Response> {
+  let last = 0;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) return r;
+      last = r.status;
+    } catch {
+      /* try the next location */
+    }
+  }
+  throw new Error(`height data ${last || 404}`);
+}
+
 function loadHeights(): Promise<Int16Array> {
-  const gz = typeof DecompressionStream !== "undefined";
-  cachedHeights ??= fetch(gz ? "/terrain/height.bin.gz" : "/terrain/height.bin")
-    .then((r) => {
-      if (!r.ok || !r.body) throw new Error(`height data ${r.status}`);
-      // The grid ships gzipped (≈3× smaller); the browser inflates it natively.
-      return gz ? new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer() : r.arrayBuffer();
-    })
-    .then((buf) => new Int16Array(buf))
-    .catch((e) => {
-      cachedHeights = null;
-      throw e;
-    });
+  cachedHeights ??= (async () => {
+    try {
+      const res = await fetchFirst(dataUrls("height.bin"));
+      return new Int16Array(await res.arrayBuffer());
+    } catch {
+      if (typeof DecompressionStream === "undefined") throw new Error("height data 404");
+      const gz = await fetchFirst(dataUrls("height.bin.gz"));
+      if (!gz.body) throw new Error("height data 404");
+      const buf = await new Response(gz.body.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+      return new Int16Array(buf);
+    }
+  })().catch((e) => {
+    cachedHeights = null;
+    throw e;
+  });
   return cachedHeights;
 }
 
-function loadTexture(url: string): Promise<THREE.Texture> {
-  return new Promise((resolve, reject) => new THREE.TextureLoader().load(url, resolve, undefined, reject));
+function loadTexture(file: string): Promise<THREE.Texture> {
+  const urls = dataUrls(file);
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.TextureLoader();
+    const tryAt = (i: number) => {
+      if (i >= urls.length) {
+        reject(new Error(`texture ${file} 404`));
+        return;
+      }
+      loader.load(urls[i], resolve, undefined, () => tryAt(i + 1));
+    };
+    tryAt(0);
+  });
 }
 
 /** Bilinear elevation (metres) at a terrain uv. */
@@ -290,6 +377,8 @@ export default function Island3D({ pins, views, progress, active = null, interac
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const labels = useRef<(HTMLLIElement | null)[]>([]);
+  const leaders = useRef<(SVGLineElement | null)[]>([]);
+  const chipSize = useRef<{ w: number; h: number }[]>([]);
   const activeRef = useRef<string[] | null>(active);
   const nudge = useRef(0);
   const supported = useSyncExternalStore(subscribeNever, hasWebGL, () => true);
@@ -374,32 +463,31 @@ export default function Island3D({ pins, views, progress, active = null, interac
     const heads: THREE.Vector3[] = pins.map(() => new THREE.Vector3());
     const beads: THREE.Mesh[] = [];
     const rings: THREE.Mesh[] = [];
+    const stems: THREE.Mesh[] = [];
+    const STEM = 0.07;
 
     let disposed = false;
     const placePins = (heights: Int16Array) => {
-      const stem = keep(new THREE.CylinderGeometry(0.0028, 0.0028, 1, 6));
-      const bead = keep(new THREE.SphereGeometry(0.02, 16, 12));
-      const ring = keep(new THREE.RingGeometry(0.018, 0.03, 32));
+      const stem = keep(new THREE.CylinderGeometry(0.0024, 0.0024, 1, 6));
+      const bead = keep(new THREE.SphereGeometry(0.016, 14, 10));
+      const ring = keep(new THREE.RingGeometry(0.014, 0.024, 24));
       ring.rotateX(-Math.PI / 2);
-      const stemMat = keep(new THREE.MeshBasicMaterial({ color: 0xfaf4e6, transparent: true, opacity: 0.85 }));
+      const stemMat = keep(new THREE.MeshBasicMaterial({ color: 0xfaf4e6, transparent: true, opacity: 0.9 }));
       const beadMat = keep(new THREE.MeshBasicMaterial({ color: 0xf0b93f }));
-      const ringMat = keep(new THREE.MeshBasicMaterial({ color: 0xf0b93f, transparent: true, opacity: 0.9, depthWrite: false }));
-      let hi = 0;
-      let lo = 0;
+      const ringMat = keep(new THREE.MeshBasicMaterial({ color: 0xf0b93f, transparent: true, opacity: 0.95, depthWrite: false }));
       pins.forEach((pin, i) => {
         const [x, n] = toXY(pin.lat, pin.lng);
         const [u, v] = toUV(pin.lat, pin.lng);
         const ground = heightToY(Math.max(0, sampleHeight(heights, u, v)));
-        // Stagger heights so labels of neighbouring places do not overlap.
-        const h = pin.high ? 0.26 + (hi++ % 4) * 0.1 : 0.16 + (lo++ % 3) * 0.07;
         const s = new THREE.Mesh(stem, stemMat);
-        s.scale.y = h;
-        s.position.set(x, ground + h / 2, -n);
+        s.scale.y = STEM;
+        s.position.set(x, ground + STEM / 2, -n);
         const b = new THREE.Mesh(bead, beadMat);
-        b.position.set(x, ground + h, -n);
+        b.position.set(x, ground + STEM, -n);
         const r = new THREE.Mesh(ring, ringMat);
         r.position.set(x, ground + 0.003, -n);
         pinGroup.add(s, b, r);
+        stems.push(s);
         beads.push(b);
         rings.push(r);
         heads[i].copy(b.position);
@@ -408,7 +496,7 @@ export default function Island3D({ pins, views, progress, active = null, interac
 
     /* ---- load real terrain ---- */
     const hd = !small && renderer.capabilities.maxTextureSize >= 4096;
-    Promise.all([loadHeights(), loadTexture(hd ? "/terrain/satellite-hd.jpg" : "/terrain/satellite-sd.jpg"), loadTexture("/terrain/water.png")])
+    Promise.all([loadHeights(), loadTexture(hd ? "satellite-hd.jpg" : "satellite-sd.jpg"), loadTexture("water.png")])
       .then(([heights, satellite, mask]): TerrainAssets => ({ heights, satellite, water: mask }))
       .then(({ heights, satellite, water: mask }) => {
         if (disposed) {
@@ -561,14 +649,74 @@ export default function Island3D({ pins, views, progress, active = null, interac
       clouds.offset.set(time * 0.004, time * 0.0025);
 
       const on = activeRef.current;
-      const pulse = reduced ? 1 : 1 + 0.25 * Math.sin(time * 2.4);
+      const pulse = reduced ? 1 : 1 + 0.18 * Math.sin(time * 2.2);
+      const screen: ScreenPin[] = [];
       for (let p = 0; p < beads.length; p++) {
         const shown = !on || on.includes(pins[p].slug);
-        const target = shown ? 1.4 : 0.7;
-        const s = beads[p].scale.x + (target - beads[p].scale.x) * Math.min(1, dt * 8);
-        beads[p].scale.setScalar(s);
+        stems[p].visible = shown;
+        beads[p].visible = shown;
         rings[p].visible = shown;
-        rings[p].scale.setScalar(pulse);
+        if (shown) rings[p].scale.setScalar(pulse);
+
+        const el = labels.current[p];
+        const line = leaders.current[p];
+        if (!el) continue;
+        if (!shown || beads.length === 0) {
+          el.dataset.on = "false";
+          if (line) line.setAttribute("opacity", "0");
+          continue;
+        }
+        v.copy(heads[p]).project(camera);
+        if (v.z > 1) {
+          el.dataset.on = "false";
+          if (line) line.setAttribute("opacity", "0");
+          continue;
+        }
+        const sx = (v.x * 0.5 + 0.5) * width;
+        const sy = (-v.y * 0.5 + 0.5) * height;
+        if (sx < -40 || sx > width + 40 || sy < -40 || sy > height + 40) {
+          el.dataset.on = "false";
+          if (line) line.setAttribute("opacity", "0");
+          continue;
+        }
+        let size = chipSize.current[p];
+        if (!size || size.w < 8) {
+          const chip = el.querySelector(".island-chip") as HTMLElement | null;
+          const measured = chip?.offsetWidth ?? 0;
+          size = {
+            w: measured > 8 ? measured : Math.round(pins[p].name.length * 7.4 + 24),
+            h: chip && chip.offsetHeight > 8 ? chip.offsetHeight : 22,
+          };
+          if (measured > 8) chipSize.current[p] = size;
+        }
+        screen.push({ i: p, sx, sy, z: v.z, w: size.w, h: size.h, lx: 0, ly: -(size.h / 2 + 16) });
+        el.style.transform = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0)`;
+        el.style.zIndex = String(2000 - Math.round(v.z * 1000));
+      }
+
+      layoutLabels(screen, width, height, interactive ? 96 : 28);
+
+      for (const p of screen) {
+        const el = labels.current[p.i];
+        const line = leaders.current[p.i];
+        if (!el) continue;
+        el.dataset.on = "true";
+        el.style.setProperty("--lx", `${p.lx.toFixed(1)}px`);
+        el.style.setProperty("--ly", `${p.ly.toFixed(1)}px`);
+        if (line) {
+          const len = Math.hypot(p.lx, p.ly);
+          if (len < 20) {
+            line.setAttribute("opacity", "0");
+          } else {
+            const cut = Math.min(p.w, p.h) * 0.45;
+            const t = (len - cut) / len;
+            line.setAttribute("x1", p.sx.toFixed(1));
+            line.setAttribute("y1", p.sy.toFixed(1));
+            line.setAttribute("x2", (p.sx + p.lx * t).toFixed(1));
+            line.setAttribute("y2", (p.sy + p.ly * t).toFixed(1));
+            line.setAttribute("opacity", "1");
+          }
+        }
       }
 
       renderer.render(scene, camera);
@@ -581,17 +729,6 @@ export default function Island3D({ pins, views, progress, active = null, interac
           renderer.setSize(width, height, false);
           slowFrames = 0;
         }
-      }
-
-      for (let p = 0; p < heads.length; p++) {
-        const el = labels.current[p];
-        if (!el) continue;
-        v.copy(heads[p]).project(camera);
-        const x = (v.x * 0.5 + 0.5) * width;
-        const y = (-v.y * 0.5 + 0.5) * height;
-        el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
-        el.style.zIndex = String(1000 - Math.round(v.z * 1000));
-        el.style.visibility = v.z > 1 || beads.length === 0 ? "hidden" : "";
       }
     };
     raf = requestAnimationFrame(tick);
@@ -613,7 +750,7 @@ export default function Island3D({ pins, views, progress, active = null, interac
   if (!supported || status === "failed") {
     return (
       <div className={`flex items-center justify-center bg-abyss p-6 ${className}`}>
-        <SatelliteMap pins={pins} className="h-full max-h-[80vh]" />
+        <SatelliteMap pins={active ? pins.filter((p) => active.includes(p.slug)) : pins} className="h-full max-h-[80vh]" />
       </div>
     );
   }
@@ -631,7 +768,18 @@ export default function Island3D({ pins, views, progress, active = null, interac
           <span className="label text-paper/70">Loading satellite terrain…</span>
         </div>
       )}
-      <ul className="pointer-events-none absolute inset-0 m-0 list-none overflow-hidden p-0" aria-label="Destinations on the map">
+      <svg className="island-leaders" aria-hidden="true">
+        {pins.map((pin, i) => (
+          <line
+            key={pin.slug}
+            ref={(el) => {
+              leaders.current[i] = el;
+            }}
+            opacity="0"
+          />
+        ))}
+      </svg>
+      <ul className="pointer-events-none absolute inset-0 z-[2] m-0 list-none overflow-hidden p-0" aria-label="Destinations on the map">
         {pins.map((pin, i) => (
           <li
             key={pin.slug}
@@ -639,9 +787,10 @@ export default function Island3D({ pins, views, progress, active = null, interac
               labels.current[i] = el;
             }}
             className="island-label"
-            data-on={status === "ready" && (!active || active.includes(pin.slug))}
+            data-on="false"
           >
-            <Link href={`/destinations/${pin.slug}`} className="glass">
+            <Link href={`/destinations/${pin.slug}`} className="island-dot" aria-label={pin.name} />
+            <Link href={`/destinations/${pin.slug}`} className="island-chip glass">
               {pin.name}
             </Link>
           </li>

@@ -33,6 +33,12 @@ export function SatelliteMap({
         loading="lazy"
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover"
+        onError={(e) => {
+          const target = e.currentTarget;
+          if (!target.src.includes("/map-data/")) {
+            target.src = "/map-data/satellite-sd.jpg";
+          }
+        }}
       />
       <ul className="absolute inset-0 m-0 list-none p-0">
         {pins.map((pin) => {
@@ -41,21 +47,23 @@ export function SatelliteMap({
           const dim = Boolean(highlight) && !main;
           return (
             <li key={pin.slug} className="absolute" style={{ left: `${(u * 100).toFixed(2)}%`, top: `${((1 - v) * 100).toFixed(2)}%` }}>
-              <Link href={`/destinations/${pin.slug}`} className="group absolute -translate-x-1/2 -translate-y-1/2" aria-label={pin.name}>
+              <Link href={`/destinations/${pin.slug}`} className="group/pin absolute -translate-x-1/2 -translate-y-1/2" aria-label={pin.name}>
                 {main && <span className="absolute -inset-2 animate-ping rounded-full bg-gold/60 motion-reduce:animate-none" aria-hidden="true" />}
                 <span
                   className={`relative block rounded-full border-2 border-paper ${main ? "h-4 w-4 bg-lacquer" : dim ? "h-2 w-2 border bg-gold/90" : "h-3 w-3 bg-gold"}`}
                   aria-hidden="true"
                 />
+                {showLabels && (
+                  <span
+                    className={`glass pointer-events-none absolute top-1/2 left-4 z-10 -translate-y-1/2 rounded-full px-2.5 py-1 font-label font-semibold tracking-[0.1em] whitespace-nowrap uppercase ${
+                      main ? "text-[0.8rem]" : "text-[0.65rem] opacity-0 transition-opacity group-hover/pin:opacity-100 group-focus-visible/pin:opacity-100"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {pin.name}
+                  </span>
+                )}
               </Link>
-              {showLabels && (!highlight || main) && (
-                <span
-                  className={`glass pointer-events-none absolute top-0 left-3 -translate-y-1/2 rounded-full px-2.5 py-1 font-label font-semibold tracking-[0.1em] whitespace-nowrap uppercase ${main ? "text-[0.8rem]" : "text-[0.65rem]"}`}
-                  aria-hidden="true"
-                >
-                  {pin.name}
-                </span>
-              )}
             </li>
           );
         })}

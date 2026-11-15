@@ -611,7 +611,7 @@ export const ATLAS: AtlasStep[] = [
     title: "One island, a whole world",
     text: "Sri Lanka is about the size of Ireland. In a single day you can leave a palm-lined beach, climb through tea country and sleep in a city founded before Rome was an empire.",
     slugs: ["colombo", "kandy", "sigiriya", "galle", "trincomalee", "jaffna"],
-    view: { lat: 7.85, lng: 80.75, dist: 11.5, az: 0.3, pol: 0.74 },
+    view: { lat: 7.85, lng: 80.75, dist: 9.2, az: 0.18, pol: 0.55 },
   },
   {
     id: "culture",
@@ -620,7 +620,7 @@ export const ATLAS: AtlasStep[] = [
     text: "Between three ancient capitals lie rock citadels, painted caves and reservoirs built two thousand years ago — and herds of wild elephants that still come to drink at them.",
     slugs: ["sigiriya", "dambulla", "anuradhapura", "polonnaruwa", "minneriya"],
     region: "Cultural Triangle",
-    view: { lat: 8.05, lng: 80.72, dist: 6.2, az: -0.35, pol: 0.82 },
+    view: { lat: 8.05, lng: 80.72, dist: 5.5, az: -0.18, pol: 0.58 },
   },
   {
     id: "hills",
@@ -629,7 +629,7 @@ export const ATLAS: AtlasStep[] = [
     text: "The centre of the island rises to more than 2,500 metres. Trains thread through estates and cloud forest between Kandy, Nuwara Eliya and Ella.",
     slugs: ["kandy", "nuwara-eliya", "ella", "horton-plains", "adams-peak"],
     region: "Hill Country",
-    view: { lat: 6.95, lng: 80.76, dist: 4.9, az: 0.55, pol: 1.0 },
+    view: { lat: 6.9, lng: 80.78, dist: 3.35, az: 0.12, pol: 0.5 },
   },
   {
     id: "south",
@@ -638,7 +638,7 @@ export const ATLAS: AtlasStep[] = [
     text: "From the ramparts of Galle to the leopard country of Yala, the south is a ribbon of coves and fishing harbours — at its best from November to April.",
     slugs: ["galle", "weligama", "mirissa", "yala"],
     region: "South Coast",
-    view: { lat: 6.25, lng: 80.8, dist: 5.4, az: 0.1, pol: 0.86 },
+    view: { lat: 6.12, lng: 80.7, dist: 4.7, az: 0.08, pol: 0.6 },
   },
   {
     id: "east",
@@ -647,7 +647,7 @@ export const ATLAS: AtlasStep[] = [
     text: "When the monsoon reaches the south-west, the east turns calm and clear. Trincomalee has the snorkelling; Arugam Bay has the waves.",
     slugs: ["trincomalee", "arugam-bay"],
     region: "East Coast",
-    view: { lat: 7.65, lng: 81.35, dist: 6.0, az: 1.05, pol: 0.86 },
+    view: { lat: 7.7, lng: 81.45, dist: 5.4, az: 0.85, pol: 0.6 },
   },
   {
     id: "north",
@@ -656,7 +656,7 @@ export const ATLAS: AtlasStep[] = [
     text: "The Tamil heartland: gold-towered kovils, a Dutch fort on the lagoon, and causeways running out across shallow sea to islands of palmyra palms.",
     slugs: ["jaffna", "anuradhapura"],
     region: "The North",
-    view: { lat: 9.2, lng: 80.35, dist: 5.4, az: -0.5, pol: 0.78 },
+    view: { lat: 9.15, lng: 80.35, dist: 5.0, az: -0.25, pol: 0.55 },
   },
 ];
 
