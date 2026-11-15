@@ -584,7 +584,7 @@ The rest of the app (`actions.ts`, pages) **never knows which backend is used**.
 
 `/api/health` reports which backend is active: `{ "ok": true, "storage": "postgres" | "file" }`.
 
-> **Why not files in production?** Serverless hosts (Vercel, Netlify) run your code in short-lived containers, and free Render instances reset their disk on restart. Files written there disappear. Use PostgreSQL online; see [DEPLOY.md](./DEPLOY.md).
+> **Why not files in production?** Serverless hosts (Vercel, Netlify) run your code in short-lived containers, and free instances reset their disk on restart. Files written there disappear. Use PostgreSQL in production by providing a `DATABASE_URL` environment variable.
 
 ---
 

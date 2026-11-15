@@ -19,7 +19,6 @@ Built purely as a **cultural showcase** (content, culture, and discovery — zer
 | --- | --- |
 | **[README.md](./README.md)** | Project overview, tech stack, and local development guide |
 | **[STUDY.md](./STUDY.md)** | Architecture breakdown, 3D math & shaders, design decisions, and deep-dive guide |
-| **[DEPLOY.md](./DEPLOY.md)** | Step-by-step free deployment tutorial (Vercel, Render, Netlify + Neon PostgreSQL) |
 
 ---
 
@@ -104,7 +103,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-> **Note on Database:** You don't need a database to run the site locally. If `DATABASE_URL` is omitted, visitor notes are automatically stored locally in `.data/serendib.json`. For production deployments with PostgreSQL (e.g. Neon), refer to [DEPLOY.md](./DEPLOY.md).
+> **Note on Database:** You don't need a database to run the site locally. If `DATABASE_URL` is omitted, visitor notes are automatically stored locally in `.data/serendib.json`. For production deployments, connect any PostgreSQL database (such as Neon, Supabase, or AWS RDS).
 
 ---
 
